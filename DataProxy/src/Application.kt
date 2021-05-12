@@ -86,6 +86,24 @@ fun Application.module(testing: Boolean = false) {
                 }
                 call.respond(users[0])
             }
+            authenticate("requires-logged-in"){
+                post("/updateBio"){
+                    val bio = call.receive<Bio>()
+                    try {
+                        val ret = dbConnector.updateBio(bio)
+                        if(ret == 0){
+                            call.response.status(HttpStatusCode.OK)
+                            call.respondText("Bio Updated")
+                        }
+                    }
+                    catch (e: ExposedSQLException){
+                        call.response.status(HttpStatusCode.Conflict)
+                        call.respondText("Cant insert Bio")
+                    }
+                    call.response.status(HttpStatusCode.ExpectationFailed)
+                    call.respond("Oh no!")
+                }
+            }
             post("/") {
                 val user = call.receive<User>()
                 val responseUser = dbConnector.insertUser(user)
